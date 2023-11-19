@@ -190,6 +190,8 @@ proc_run用于将指定的进程切换到CPU上运行。它的大致执行步骤
 ### 设计实现过程
 
 ```c
+    if (proc != current)
+    {
         bool intr_flag;
         struct proc_struct *prev = current, *next = proc;
         local_intr_save(intr_flag);
@@ -197,6 +199,7 @@ proc_run用于将指定的进程切换到CPU上运行。它的大致执行步骤
         lcr3(next->cr3);
         switch_to(&(prev->context), &(next->context));
         local_intr_restore(intr_flag);
+    }
 
 ```
 1.	检查要切换的进程是否与当前正在运行的进程相同，如果相同则不需要切换。

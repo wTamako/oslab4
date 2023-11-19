@@ -114,9 +114,7 @@ get_pid(void) {
     static_assert(MAX_PID > MAX_PROCESS);
     struct proc_struct *proc;
     list_entry_t *list = &proc_list, *le;
-    //next_safe和last_pid两个变量，这里需要注意的是，它们是static全局变量，每一次调用这个函数的时候，这两个变量的数值之间的取值均是合法的 pid（也就是说没有被使用过）
     static int next_safe = MAX_PID, last_pid = MAX_PID;
-    //++last_pid>=MAX_PID,说明pid分到了最后一个，需要从1重新再来
     if (++ last_pid >= MAX_PID) {
         last_pid = 1;
         goto inside;
@@ -125,13 +123,10 @@ get_pid(void) {
     inside:
         next_safe = MAX_PID;
     repeat:
-        le = list; //le等于线程的链表头
-        while ((le = list_next(le)) != list) {//这里相当于循环链表的操作
+        le = list; 
+        while ((le = list_next(le)) != list) {
             proc = le2proc(le, list_link);
             if (proc->pid == last_pid) {
-                //如果proc的pid与last_pid相等，即这个pid被其他进程占用，则将last_pid加1，重新检查
-                //如果又发生了last_pid+1 >= next_safe，next_safe就要变为最后一个，重新循环
-                //当然这里如果在前两者基础上出现了last_pid>=MAX_PID,相当于直接从整个区间重新再来
                 if (++ last_pid >= next_safe) {
                     if (last_pid >= MAX_PID) {
                         last_pid = 1;
@@ -140,7 +135,6 @@ get_pid(void) {
                     goto repeat;
                 }
             }
-            //如果last_pid<proc->pid<next_safe，确保最后能够找到这么一个满足条件的区间[last_pid,min(next_safe, proc->pid)) 尚未被占用，获得合法的pid范围，取区间第一个作为返回值
             else if (proc->pid > last_pid && next_safe > proc->pid) {
                 next_safe = proc->pid;
             }

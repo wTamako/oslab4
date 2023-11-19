@@ -78,12 +78,10 @@ tf里保存了进程的中断帧。当进程从用户空间跳进内核空间的
     copy_thread(proc, stack, tf);
     bool intr_flag;
     local_intr_save(intr_flag);
-    {
-        proc->pid = get_pid();
-        hash_proc(proc);
-        list_add(&proc_list, &(proc->list_link));
-        nr_process++;
-    }
+    proc->pid = get_pid();
+    hash_proc(proc);
+    list_add(&proc_list, &(proc->list_link));
+    nr_process++;
     local_intr_restore(intr_flag);
 
     wakeup_proc(proc);
@@ -195,12 +193,9 @@ proc_run用于将指定的进程切换到CPU上运行。它的大致执行步骤
         bool intr_flag;
         struct proc_struct *prev = current, *next = proc;
         local_intr_save(intr_flag);
-        // {
         current = proc;
-        //     load_esp0(next->kstack + KSTACKSIZE);
         lcr3(next->cr3);
         switch_to(&(prev->context), &(next->context));
-        // }
         local_intr_restore(intr_flag);
 
 ```
